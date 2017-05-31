@@ -92,13 +92,14 @@ Options:
   -d           Use random directories to create files.
   -D           Dry run mode (do not commit).
   -n N         Generate N number of commits.
+  -l           List file names and extensions used to generate random file names.
   -v           Be verbose.
   -h           Show this help and exit.
 EOF
 }
 
 function process_options() {
-	while getopts ":hdDn:v" opt; do
+	while getopts ":hdDln:v" opt; do
 		case "$opt" in
 			d)
 				USE_DIRECTORIES=yes
@@ -109,6 +110,10 @@ function process_options() {
 			h)
 				show_help
 				exit 1
+			;;
+			l)
+				show_file_names_and_extensions
+				exit 0
 			;;
 			n)
 				COMMIT_COUNT="$OPTARG"
