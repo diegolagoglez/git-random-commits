@@ -151,9 +151,9 @@ function check_options() {
 
 function init_git_repository_if_requested() {
 	if [ ! -z "$INIT_GIT" ]; then
-		verbose "Initializing Git repository..."
+		verbose " ! Initializing Git repository..."
 		if is_dry_run; then
-			echo "  git init"
+			echo "   git init"
 		else
 			git init
 		fi
@@ -162,14 +162,17 @@ function init_git_repository_if_requested() {
 
 function generate_commit() {
 	local filepath=
+	local commit_message=$(get_random_commit_message)
 	if is_dry_run; then
 		# echo mkdir -p $(dirname -- $filepath)
 		# echo touch $filepath
 		for n in $(seq 1 $FILES_PER_COMMIT); do
 			filepath=$(construct_random_filename)
-			echo "  git add $filepath"
+			verbose " + Add file to commit: $filepath"
+			echo "   git add $filepath"
 		done
-		echo "  git commit --message "\"$(get_random_commit_message)\"""
+		verbose " > Commiting with message \"$commit_message\"..."
+		echo "   git commit --message "\"$commit_message\"""
 	else
 		for n in $(seq 1 $FILES_PER_COMMIT); do
 			filepath=$(construct_random_filename)
@@ -184,7 +187,6 @@ function generate_commit() {
 			fi
 			verbose " + Add file to commit: $filepath"
 		done
-		local commit_message=$(get_random_commit_message)
 		verbose " > Commiting with message '$commit_message'..."
 		if ! git commit --message "$commit_message"; then
 			error "Cannot commit in Git repository." 1
