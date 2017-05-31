@@ -1,0 +1,69 @@
+#!/bin/bash
+
+COMMIT_RANDOM_MESSAGE_URL=http://whatthecommit.com/index.txt
+
+FILENAMES=(main manager component controller action utils crypt build security sound driver
+           parser json xml view serializer icon system network config base dashboard login
+           widget vendor bootstrap highlight ajax core default store language loader writer
+           reader model test lint helper package notification navigator message router admin
+           setting environment module service about index home branch release project nav
+           timeline commit bar api http https user auth mock humans robots lock blocker url
+           www library lib sql database table tmp bin binary function procedure receiver
+           sender post pre merger chart reviewer task monitor detail feed schedule revert)
+
+FILENAMES_COUNT=${#FILENAMES[@]}
+
+EXTENSIONS=(.txt .h .c .hpp .cpp .d .py .rb .sh .s .md .pdf .csv .gif .jpg .svg .css .html
+            .php .js .png .so .pl .ttf .yaml .json .xml .log .am .in .mk .tar .gz .tar.gz
+            .m4 .go .asm .java .hxx .cxx .di .lib .ini .cfg .conf .pm .url .zip .ada .cc
+            .dtd .idl .lisp .o .obj .pas .res .ui .uml .dat .ac .dts .sys .rar .xz .boot)
+
+EXTENSIONS_COUNT=${#EXTENSIONS[@]}
+
+function join_by() {
+	local IFS="$1"
+	shift
+	echo "$*"
+}
+
+function get_random_commit_message() {
+	curl -s "$COMMIT_RANDOM_MESSAGE_URL"
+}
+
+function get_random_file_name() {
+	local r=$((RANDOM % FILENAMES_COUNT))
+	echo ${FILENAMES[$r]}
+}
+
+function get_random_extension() {
+	local r=$((RANDOM % EXTENSIONS_COUNT))
+	echo ${EXTENSIONS[$r]}
+}
+
+function construct_random_filename() {
+	local part_count_prob=(1 1 1 1 2 2 2 2 3 3)
+	local c=${#part_count_prob[@]}
+	local r=$((RANDOM % $c))
+	local parts=${part_count_prob[$r]}
+	local filenames=()
+	for n in $(seq 1 $parts); do
+		filenames+=($(get_random_file_name))
+	done
+	echo "$(join_by '_' ${filenames[*]})$(get_random_extension)"
+}
+
+function process_options() {
+	while getopts ":" opt; do
+		case "$opt" in
+		esac
+	done
+}
+
+function main() {
+	process_options	"$@"
+	for i in $(seq 1 10); do
+		construct_random_filename
+	done
+}
+
+main "$@"
