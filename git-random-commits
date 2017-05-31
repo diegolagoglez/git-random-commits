@@ -5,6 +5,7 @@ DESCRIPTION="Utility to generate random commits in CURRENT Git repository"
 COPYRIGHT="GPLv3 - Diego Lago <diego.lago.gonzalez@gmail.com>"
 
 DRY_RUN=
+INIT_GIT=
 USE_DIRECTORIES=
 COMMIT_COUNT=1
 FILES_PER_COMMIT=1
@@ -94,6 +95,7 @@ $(basename -- $0) -- $DESCRIPTION
 $COPYRIGHT
 Usage: $(basename -- $0) [options]
 Options:
+  -i           Init Git repository before making any commit.
   -d           Use random directories to create files.
   -D           Dry run mode (do not commit).
   -l           List file names and extensions used to generate random file names.
@@ -105,8 +107,11 @@ EOF
 }
 
 function process_options() {
-	while getopts ":hdDln:N:v" opt; do
+	while getopts ":hidDln:N:v" opt; do
 		case "$opt" in
+			i)
+				INIT_GIT=yes
+			;;
 			d)
 				USE_DIRECTORIES=yes
 			;;
@@ -142,6 +147,17 @@ function process_options() {
 
 function check_options() {
 	:
+}
+
+function init_git_repository_if_requested() {
+	if [ ! -z "$INIT_GIT" ]; then
+		verbose "Initializing Git repository..."
+		if is_dry_run; then
+			echo "  git init"
+		else
+			git init
+		fi
+	fi
 }
 
 function generate_commit() {
@@ -185,6 +201,7 @@ function main() {
 	verbose "** DRY RUN Mode **"
 	verbose "Creating $COMMIT_COUNT random commits..."
 	verbose "Using '$COMMIT_RANDOM_MESSAGE_URL' to generate random commit messages."
+	init_git_repository_if_requested
 	for i in $(seq 1 $COMMIT_COUNT); do
 		generate_commit
 	done
