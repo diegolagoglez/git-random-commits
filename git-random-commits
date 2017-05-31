@@ -206,6 +206,7 @@ function process_options() {
 }
 
 function check_options() {
+	# TODO: Check all options.
 	if [ ! -z "$COMMIT_RANDOM_MESSAGE_FILE" -a ! -f "$COMMIT_RANDOM_MESSAGE_FILE" ]; then
 		error "Random commit messages file is not found: $COMMIT_RANDOM_MESSAGE_FILE" 1
 	fi
