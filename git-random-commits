@@ -44,6 +44,15 @@ EXTENSIONS=(.txt .h .c .hpp .cpp .d .py .rb .sh .s .md .pdf .csv .gif .jpg .svg 
 
 EXTENSIONS_COUNT=${#EXTENSIONS[@]}
 
+USER_NAMES=(James David Christopher George Ronald John Richard Daniel Kenneth Antony Robert
+	        Charles Paul Steven Kevin Michael Joseph Mark Edward Jason William Thomas Donald
+	        Brian Jeff Mary Jennifer Lisa Sandra Michelle Patricia Maria Nancy Donna Laura
+	        Linda Susan Karen Carol Sarah Barbara Margaret Betty Ruth Kimberly Elisabeth
+	        Dorothy Helen Sharon Deborah)
+
+NAME_PATTERN="XNAMEX"
+UPPERNAME_PATTERN="XUPPERNAMEX"
+
 function error() {
 	echo "ERROR: $1" 1>&2
 	exit $2
@@ -65,6 +74,12 @@ function is_dry_run() {
 	test ! -z "$DRY_RUN"
 }
 
+function get_random_user_name() {
+	local c=${#USER_NAMES[@]}
+	local r=$((RANDOM % c))
+	echo ${USER_NAMES[$r]}
+}
+
 function get_random_commit_message_from_url() {
 	curl -s "$COMMIT_RANDOM_MESSAGE_URL"
 }
@@ -77,10 +92,11 @@ function get_random_commit_message_from_file() {
 }
 
 function get_random_commit_message() {
+	local username=$(get_random_user_name)
 	if [ ! -z "$COMMIT_RANDOM_MESSAGE_FILE" ]; then
-		get_random_commit_message_from_file
+		get_random_commit_message_from_file | sed -e "s/XNAMEX/$username/" -e "s/XUPPERNAMEX/${username^^}/"
 	else
-		get_random_commit_message_from_url
+		get_random_commit_message_from_url | sed -e "s/XNAMEX/$username/" -e "s/XUPPERNAMEX/${username^^}/"
 	fi
 	
 }
