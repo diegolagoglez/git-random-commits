@@ -1,5 +1,9 @@
 #!/bin/bash
 
+VERSION="0.0.1 20170531"
+DESCRIPTION="Utility to generate random commits in CURRENT Git repository"
+COPYRIGHT="GPLv3 - Diego Lago <diego.lago.gonzalez@gmail.com>"
+
 DRY_RUN=
 USE_DIRECTORIES=
 COMMIT_COUNT=1
@@ -86,8 +90,8 @@ function show_file_names_and_extensions() {
 
 function show_help() {
 	cat <<EOF
-$(basename -- $0) - Utility to generate random commits in a Git repository.
-GPLv3 - Diego Lago <diego.lago.gonzalez@gmail.com>
+$(basename -- $0) -- $DESCRIPTION
+$COPYRIGHT
 Usage: $(basename -- $0) [options]
 Options:
   -d           Use random directories to create files.
@@ -176,6 +180,9 @@ function main() {
 	process_options	"$@"
 	shift $OPTIND
 	check_options
+	verbose "$(basename -- $0) $VERSION - $DESCRIPTION"
+	verbose "$COPYRIGHT"
+	verbose "** DRY RUN Mode **"
 	verbose "Creating $COMMIT_COUNT random commits..."
 	verbose "Using '$COMMIT_RANDOM_MESSAGE_URL' to generate random commit messages."
 	for i in $(seq 1 $COMMIT_COUNT); do
