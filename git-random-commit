@@ -3,6 +3,7 @@
 DRY_RUN=
 USE_DIRECTORIES=
 COMMIT_COUNT=1
+FILES_PER_COMMIT=1
 VERBOSE=
 
 COMMIT_RANDOM_MESSAGE_URL=http://whatthecommit.com/index.txt
@@ -91,15 +92,16 @@ Usage: $(basename -- $0) [options]
 Options:
   -d           Use random directories to create files.
   -D           Dry run mode (do not commit).
-  -n N         Generate N number of commits.
   -l           List file names and extensions used to generate random file names.
+  -n N         Generate N number of commits (default: $COMMIT_COUNT).
+  -N N         Use N files to create the commit (default: $FILES_PER_COMMIT).
   -v           Be verbose.
   -h           Show this help and exit.
 EOF
 }
 
 function process_options() {
-	while getopts ":hdDln:v" opt; do
+	while getopts ":hdDln:N:v" opt; do
 		case "$opt" in
 			d)
 				USE_DIRECTORIES=yes
@@ -117,6 +119,9 @@ function process_options() {
 			;;
 			n)
 				COMMIT_COUNT="$OPTARG"
+			;;
+			N)
+				FILES_PER_COMMIT="$OPTARG"
 			;;
 			v)
 				VERBOSE=yes
@@ -136,24 +141,31 @@ function check_options() {
 }
 
 function generate_commit() {
-	local filepath=$(construct_random_filename)
+	local filepath=
 	if is_dry_run; then
 		# echo mkdir -p $(dirname -- $filepath)
 		# echo touch $filepath
-		echo "  git add $filepath"
+		for n in $(seq 1 $FILES_PER_COMMIT); do
+			filepath=$(construct_random_filename)
+			echo "  git add $filepath"
+		done
 		echo "  git commit --message "\"$(get_random_commit_message)\"""
 	else
-		if ! mkdir -p $(dirname -- $filepath); then
-			error "Cannot create directory: $(dirname -- $filepath)" 1
-		fi
-		if ! touch $filepath; then
-			error "Cannot touch file: $filepath" 1
-		fi
-		if ! git add $filepath; then
-			error "Cannot add file to Git repository: $filepath" 1
-		fi
+		for n in $(seq 1 $FILES_PER_COMMIT); do
+			filepath=$(construct_random_filename)
+			if ! mkdir -p $(dirname -- $filepath); then
+				error "Cannot create directory: $(dirname -- $filepath)" 1
+			fi
+			if ! touch $filepath; then
+				error "Cannot touch file: $filepath" 1
+			fi
+			if ! git add $filepath; then
+				error "Cannot add file to Git repository: $filepath" 1
+			fi
+			verbose " + Add file to commit: $filepath"
+		done
 		local commit_message=$(get_random_commit_message)
-		verbose "Commiting '$filepath' with message '$commit_message'..."
+		verbose " > Commiting with message '$commit_message'..."
 		if ! git commit --message "$commit_message"; then
 			error "Cannot commit in Git repository." 1
 		fi
