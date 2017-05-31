@@ -14,6 +14,7 @@ VERBOSE=
 BRANCH=
 
 COMMIT_RANDOM_MESSAGE_URL=http://whatthecommit.com/index.txt
+COMMIT_RANDOM_MESSAGE_FILE=
 
 FILENAMES=(main manager component controller action utils crypt build security sound driver
            parser json xml view serializer icon system network config base dashboard login
@@ -64,8 +65,24 @@ function is_dry_run() {
 	test ! -z "$DRY_RUN"
 }
 
-function get_random_commit_message() {
+function get_random_commit_message_from_url() {
 	curl -s "$COMMIT_RANDOM_MESSAGE_URL"
+}
+
+function get_random_commit_message_from_file() {
+	local message_count=$(wc -l "$COMMIT_RANDOM_MESSAGE_FILE" | cut -d' ' -f1)
+	local r=$((RANDOM % message_count))
+	r=$((r+1))  # sed don't use a zero-based line index when accessing to files.
+	sed --quiet "${r}p" "$COMMIT_RANDOM_MESSAGE_FILE"
+}
+
+function get_random_commit_message() {
+	if [ ! -z "$COMMIT_RANDOM_MESSAGE_FILE" ]; then
+		get_random_commit_message_from_file
+	else
+		get_random_commit_message_from_url
+	fi
+	
 }
 
 function get_random_file_name() {
@@ -110,6 +127,7 @@ Options:
   -b BRANCH    Use BRANCH to commit (default is current branch; create if needed).
   -d           Use random directories to create files.
   -D           Dry run mode (do not commit).
+  -f FILE      Use FILE as the file where commit messages are loaded from.
   -g           Only generate (and print) random file names.
   -i           Init Git repository before making any commit.
   -l           List file names and extensions used to generate random file names.
@@ -121,7 +139,7 @@ EOF
 }
 
 function process_options() {
-	while getopts ":b:ghidDln:N:v" opt; do
+	while getopts ":b:f:ghidDln:N:v" opt; do
 		case "$opt" in
 			b)
 				BRANCH="$OPTARG"
@@ -131,6 +149,9 @@ function process_options() {
 			;;
 			D)
 				DRY_RUN=yes
+			;;
+			f)
+				COMMIT_RANDOM_MESSAGE_FILE="$OPTARG"
 			;;
 			g)
 				ONLY_GENERATE_FILE_NAMES=yes
@@ -166,7 +187,9 @@ function process_options() {
 }
 
 function check_options() {
-	:
+	if [ ! -z "$COMMIT_RANDOM_MESSAGE_FILE" -a ! -f "$COMMIT_RANDOM_MESSAGE_FILE" ]; then
+		error "Random commit messages file is not found: $COMMIT_RANDOM_MESSAGE_FILE" 1
+	fi
 }
 
 function init_git_repository_if_requested() {
@@ -242,6 +265,11 @@ function main() {
 		generate_random_filenames
 	else
 		verbose "Creating $COMMIT_COUNT random commits..."
+		if [ -z "$COMMIT_RANDOM_MESSAGE_FILE" ]; then
+			verbose "Using '$COMMIT_RANDOM_MESSAGE_URL' to generate random commit messages."
+		else
+			verbose "Using '$COMMIT_RANDOM_MESSAGE_FILE' to generate random commit messages."
+		fi
 		init_git_repository_if_requested
 		for i in $(seq 1 $COMMIT_COUNT); do
 			generate_commit_and_make_the_commit
