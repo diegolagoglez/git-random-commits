@@ -5,6 +5,7 @@ DESCRIPTION="Utility to generate random commits in CURRENT Git repository"
 COPYRIGHT="GPLv3 - Diego Lago <diego.lago.gonzalez@gmail.com>"
 
 DRY_RUN=
+ONLY_GENERATE_FILE_NAMES=
 INIT_GIT=
 USE_DIRECTORIES=
 COMMIT_COUNT=1
@@ -105,9 +106,10 @@ $(basename -- $0) -- $DESCRIPTION
 $COPYRIGHT
 Usage: $(basename -- $0) [options]
 Options:
-  -i           Init Git repository before making any commit.
   -d           Use random directories to create files.
   -D           Dry run mode (do not commit).
+  -g           Only generate (and print) random file names.
+  -i           Init Git repository before making any commit.
   -l           List file names and extensions used to generate random file names.
   -n N         Generate N number of commits (default: $COMMIT_COUNT).
   -N N         Use N files to create the commit (default: $FILES_PER_COMMIT).
@@ -117,20 +119,23 @@ EOF
 }
 
 function process_options() {
-	while getopts ":hidDln:N:v" opt; do
+	while getopts ":ghidDln:N:v" opt; do
 		case "$opt" in
-			i)
-				INIT_GIT=yes
-			;;
 			d)
 				USE_DIRECTORIES=yes
 			;;
 			D)
 				DRY_RUN=yes
 			;;
+			g)
+				ONLY_GENERATE_FILE_NAMES=yes
+			;;
 			h)
 				show_help
 				exit 1
+			;;
+			i)
+				INIT_GIT=yes
 			;;
 			l)
 				show_file_names_and_extensions
@@ -204,6 +209,12 @@ function generate_commit() {
 	fi
 }
 
+function generate_random_filenames() {
+	for n in $(seq 1 $FILES_PER_COMMIT); do
+		construct_random_filename
+	done
+}
+
 function main() {
 	process_options	"$@"
 	shift $OPTIND
@@ -213,10 +224,14 @@ function main() {
 	verbose "** DRY RUN Mode **"
 	verbose "Creating $COMMIT_COUNT random commits..."
 	verbose "Using '$COMMIT_RANDOM_MESSAGE_URL' to generate random commit messages."
-	init_git_repository_if_requested
-	for i in $(seq 1 $COMMIT_COUNT); do
-		generate_commit
-	done
+	if [ ! -z "$ONLY_GENERATE_FILE_NAMES" ]; then
+		generate_random_filenames
+	else
+		init_git_repository_if_requested
+		for i in $(seq 1 $COMMIT_COUNT); do
+			generate_commit
+		done
+	fi
 	verbose "Done."
 }
 
