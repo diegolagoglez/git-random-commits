@@ -53,6 +53,9 @@ USER_NAMES=(James David Christopher George Ronald John Richard Daniel Kenneth An
 NAME_PATTERN="XNAMEX"
 UPPERNAME_PATTERN="XUPPERNAMEX"
 
+# TODO: Process XNUM([0-9,]*)X patterns
+NUM_PATTERN='XNUM([0-9,]*)X'
+
 function error() {
 	echo "ERROR: $1" 1>&2
 	exit $2
