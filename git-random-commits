@@ -238,11 +238,10 @@ function main() {
 	if is_dry_run; then
 		verbose "*** DRY RUN Mode ***"
 	fi
-	verbose "Creating $COMMIT_COUNT random commits..."
-	verbose "Using '$COMMIT_RANDOM_MESSAGE_URL' to generate random commit messages."
 	if [ ! -z "$ONLY_GENERATE_FILE_NAMES" ]; then
 		generate_random_filenames
 	else
+		verbose "Creating $COMMIT_COUNT random commits..."
 		init_git_repository_if_requested
 		for i in $(seq 1 $COMMIT_COUNT); do
 			generate_commit_and_make_the_commit
