@@ -11,6 +11,7 @@ USE_DIRECTORIES=
 COMMIT_COUNT=1
 FILES_PER_COMMIT=1
 VERBOSE=
+BRANCH=
 
 COMMIT_RANDOM_MESSAGE_URL=http://whatthecommit.com/index.txt
 
@@ -106,6 +107,7 @@ $(basename -- $0) -- $DESCRIPTION
 $COPYRIGHT
 Usage: $(basename -- $0) [options]
 Options:
+  -b BRANCH    Use BRANCH to commit (default is current branch; create if needed).
   -d           Use random directories to create files.
   -D           Dry run mode (do not commit).
   -g           Only generate (and print) random file names.
@@ -119,8 +121,11 @@ EOF
 }
 
 function process_options() {
-	while getopts ":ghidDln:N:v" opt; do
+	while getopts ":b:ghidDln:N:v" opt; do
 		case "$opt" in
+			b)
+				BRANCH="$OPTARG"
+			;;
 			d)
 				USE_DIRECTORIES=yes
 			;;
@@ -175,12 +180,14 @@ function init_git_repository_if_requested() {
 	fi
 }
 
-function generate_commit() {
+function generate_commit_and_make_the_commit() {
 	local filepath=
 	local commit_message=$(get_random_commit_message)
 	if is_dry_run; then
-		# echo mkdir -p $(dirname -- $filepath)
-		# echo touch $filepath
+		if [ ! -z "$BRANCH" ]; then
+			verbose " - Checkout branch $BRANCH..."
+			echo "   git checkout -b $BRANCH"
+		fi
 		for n in $(seq 1 $FILES_PER_COMMIT); do
 			filepath=$(construct_random_filename)
 			verbose " + Add file to commit: $filepath"
@@ -189,6 +196,10 @@ function generate_commit() {
 		verbose " > Commiting with message \"$commit_message\"..."
 		echo "   git commit --message "\"$commit_message\"""
 	else
+		if [ ! -z "$BRANCH" ]; then
+			verbose "  - Checkout branch $BRANCH..."
+			git checkout -b "$BRANCH"
+		fi
 		for n in $(seq 1 $FILES_PER_COMMIT); do
 			filepath=$(construct_random_filename)
 			if ! mkdir -p $(dirname -- $filepath); then
@@ -205,6 +216,9 @@ function generate_commit() {
 		verbose " > Commiting with message '$commit_message'..."
 		if ! git commit --message "$commit_message"; then
 			error "Cannot commit in Git repository." 1
+		fi
+		if [ ! -z "$BRANCH" ]; then
+			git checkout -
 		fi
 	fi
 }
@@ -231,7 +245,7 @@ function main() {
 	else
 		init_git_repository_if_requested
 		for i in $(seq 1 $COMMIT_COUNT); do
-			generate_commit
+			generate_commit_and_make_the_commit
 		done
 	fi
 	verbose "Done."
