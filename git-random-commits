@@ -221,7 +221,9 @@ function main() {
 	check_options
 	verbose "$(basename -- $0) $VERSION - $DESCRIPTION"
 	verbose "$COPYRIGHT"
-	verbose "** DRY RUN Mode **"
+	if is_dry_run; then
+		verbose "*** DRY RUN Mode ***"
+	fi
 	verbose "Creating $COMMIT_COUNT random commits..."
 	verbose "Using '$COMMIT_RANDOM_MESSAGE_URL' to generate random commit messages."
 	if [ ! -z "$ONLY_GENERATE_FILE_NAMES" ]; then
