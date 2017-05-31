@@ -20,7 +20,14 @@ FILENAMES=(main manager component controller action utils crypt build security s
            setting environment module service about index home branch release project nav
            timeline commit bar api http https user auth mock humans robots lock blocker url
            www library lib sql database table tmp bin binary function procedure receiver
-           sender post pre merger chart reviewer task monitor detail feed schedule revert)
+           sender post pre merger chart reviewer task monitor detail feed schedule revert
+           kernel filter cache fixture requirement subversion git repository static dynamic
+           command group ignore import export watch compile launch daemon execute process
+           resolve option rebase automerge automatic clean install uninstall seed preseed
+           operation build update upgrade purge multibuild setup link issue maker tree file
+           path full empty daily weekly monthly yearly tag operate run kill freeze delete
+           remove undelete notify common report extension fleet mail infrastructure metrics
+           tool unlock degrade sandbox packager query agent status fast slow linux debug)
 
 FILENAMES_COUNT=${#FILENAMES[@]}
 
