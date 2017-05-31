@@ -76,6 +76,13 @@ function construct_random_filename() {
 	echo "$dir$(join_by '_' ${filenames[*]})$(get_random_extension)"
 }
 
+function show_file_names_and_extensions() {
+	echo "-----Base File Names-----"
+	echo ${FILENAMES[*]}
+	echo "-----Base Extensions-----"
+	echo ${EXTENSIONS[*]}
+}
+
 function show_help() {
 	cat <<EOF
 $(basename -- $0) - Utility to generate random commits in a Git repository.
