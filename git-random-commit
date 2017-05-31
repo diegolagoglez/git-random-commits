@@ -1,5 +1,10 @@
 #!/bin/bash
 
+DRY_RUN=
+USE_DIRECTORIES=
+COMMIT_COUNT=1
+VERBOSE=
+
 COMMIT_RANDOM_MESSAGE_URL=http://whatthecommit.com/index.txt
 
 FILENAMES=(main manager component controller action utils crypt build security sound driver
@@ -20,10 +25,25 @@ EXTENSIONS=(.txt .h .c .hpp .cpp .d .py .rb .sh .s .md .pdf .csv .gif .jpg .svg 
 
 EXTENSIONS_COUNT=${#EXTENSIONS[@]}
 
+function error() {
+	echo "ERROR: $1" 1>&2
+	exit $2
+}
+
+function verbose() {
+	if [ ! -z "$VERBOSE" ]; then
+		echo "$*"
+	fi
+}
+
 function join_by() {
 	local IFS="$1"
 	shift
 	echo "$*"
+}
+
+function is_dry_run() {
+	test ! -z "$DRY_RUN"
 }
 
 function get_random_commit_message() {
@@ -46,24 +66,98 @@ function construct_random_filename() {
 	local r=$((RANDOM % $c))
 	local parts=${part_count_prob[$r]}
 	local filenames=()
+	local dir=
 	for n in $(seq 1 $parts); do
+		if [ ! -z "$USE_DIRECTORIES" ]; then
+			dir="$(get_random_file_name)/"
+		fi
 		filenames+=($(get_random_file_name))
 	done
-	echo "$(join_by '_' ${filenames[*]})$(get_random_extension)"
+	echo "$dir$(join_by '_' ${filenames[*]})$(get_random_extension)"
+}
+
+function show_help() {
+	cat <<EOF
+$(basename -- $0) - Utility to generate random commits in a Git repository.
+GPLv3 - Diego Lago <diego.lago.gonzalez@gmail.com>
+Usage: $(basename -- $0) [options]
+Options:
+  -d           Use random directories to create files.
+  -D           Dry run mode (do not commit).
+  -n N         Generate N number of commits.
+  -v           Be verbose.
+  -h           Show this help and exit.
+EOF
 }
 
 function process_options() {
-	while getopts ":" opt; do
+	while getopts ":hdDn:v" opt; do
 		case "$opt" in
+			d)
+				USE_DIRECTORIES=yes
+			;;
+			D)
+				DRY_RUN=yes
+			;;
+			h)
+				show_help
+				exit 1
+			;;
+			n)
+				COMMIT_COUNT="$OPTARG"
+			;;
+			v)
+				VERBOSE=yes
+			;;
+			\?)
+				error "Invalid option: -$OPTARG" 1
+			;;
+			:)
+				error "Option -$OPTARG requires an argument." 1
+			;;
 		esac
 	done
 }
 
+function check_options() {
+	:
+}
+
+function generate_commit() {
+	local filepath=$(construct_random_filename)
+	if is_dry_run; then
+		# echo mkdir -p $(dirname -- $filepath)
+		# echo touch $filepath
+		echo "  git add $filepath"
+		echo "  git commit --message "\"$(get_random_commit_message)\"""
+	else
+		if ! mkdir -p $(dirname -- $filepath); then
+			error "Cannot create directory: $(dirname -- $filepath)" 1
+		fi
+		if ! touch $filepath; then
+			error "Cannot touch file: $filepath" 1
+		fi
+		if ! git add $filepath; then
+			error "Cannot add file to Git repository: $filepath" 1
+		fi
+		local commit_message=$(get_random_commit_message)
+		verbose "Commiting '$filepath' with message '$commit_message'..."
+		if ! git commit --message "$commit_message"; then
+			error "Cannot commit in Git repository." 1
+		fi
+	fi
+}
+
 function main() {
 	process_options	"$@"
-	for i in $(seq 1 10); do
-		construct_random_filename
+	shift $OPTIND
+	check_options
+	verbose "Creating $COMMIT_COUNT random commits..."
+	verbose "Using '$COMMIT_RANDOM_MESSAGE_URL' to generate random commit messages."
+	for i in $(seq 1 $COMMIT_COUNT); do
+		generate_commit
 	done
+	verbose "Done."
 }
 
 main "$@"
