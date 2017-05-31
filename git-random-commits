@@ -50,7 +50,7 @@ function error() {
 
 function verbose() {
 	if [ ! -z "$VERBOSE" ]; then
-		echo "$*"
+		echo "$*" 1>&2
 	fi
 }
 
